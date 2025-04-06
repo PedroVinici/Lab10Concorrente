@@ -1,10 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.domain.Product;
-import com.example.demo.dto.ProductSaveDTO;
-import com.example.demo.dto.ProdutoResponseDTO;
-import com.example.demo.dto.UpdateStockDTO;
-import com.example.demo.dto.UpdateStockResponseDTO;
+import com.example.demo.dto.*;
 import com.example.demo.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -46,6 +43,12 @@ public class ProductService {
         return CompletableFuture.supplyAsync(() -> {
             return productRepository.updateStock(updateStockDTO, productId);
         }, taskExecutor);
+    }
+
+    public CompletableFuture<PurchaseDTO> purchaseProduct(ProductPurchaseDTO productPurchaseDTO) throws ExecutionException, InterruptedException {
+        Callable<PurchaseDTO> newPurchaseDTO = () -> {
+            Product product = productRepository.get
+        }
     }
 
 

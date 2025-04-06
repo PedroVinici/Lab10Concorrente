@@ -1,10 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.domain.Product;
-import com.example.demo.dto.ProductSaveDTO;
-import com.example.demo.dto.ProdutoResponseDTO;
-import com.example.demo.dto.UpdateStockDTO;
-import com.example.demo.dto.UpdateStockResponseDTO;
+import com.example.demo.dto.*;
 import com.example.demo.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,4 +32,9 @@ public class ECommerceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PutMapping("/products/purchase")
+    public ResponseEntity<PurchaseDTO> purchase(@RequestBody ProductPurchaseDTO productPurchaseDTO) {
+        PurchaseDTO response = productService.purchaseProduct(productPurchaseDTO).join();
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
