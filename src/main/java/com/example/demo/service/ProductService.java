@@ -11,9 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 @Service
 public class ProductService {
@@ -25,17 +23,25 @@ public class ProductService {
     @Autowired
     private TaskExecutor taskExecutor;
 
-    public ProdutoResponseDTO addProducts(ProductSaveDTO productSaveDTO){
-        Product newProduct = productRepository.addProduct(productSaveDTO);
+    private ExecutorService executor = Executors.newCachedThreadPool();
 
-        ProdutoResponseDTO produtoResponseDTO  = new ProdutoResponseDTO();
-        produtoResponseDTO.setId(newProduct.getId());
-        produtoResponseDTO.setName(newProduct.getName());
-        produtoResponseDTO.setMessage("Produto cadastrado com sucesso.");
+    //Meus chegados, essa é a opção utilizando o Callable que Geovanni ensinou
+    public ProdutoResponseDTO addProducts(ProductSaveDTO productSaveDTO) throws ExecutionException, InterruptedException {
+        Callable<ProdutoResponseDTO> newProdutoResponseDTO = () -> {
+            Product newProduct = productRepository.addProduct(productSaveDTO);
 
-        return produtoResponseDTO;
+            ProdutoResponseDTO produtoResponseDTO  = new ProdutoResponseDTO();
+            produtoResponseDTO.setId(newProduct.getId());
+            produtoResponseDTO.setName(newProduct.getName());
+            produtoResponseDTO.setMessage("Produto cadastrado com sucesso.");
+
+            return produtoResponseDTO;
+        };
+        Future<ProdutoResponseDTO> newProduct = executor.submit(newProdutoResponseDTO);
+        return newProduct.get();
+
     }
-
+    // Essa é a opção que o GPT sugeriu
     public CompletableFuture<UpdateStockResponseDTO> updateStock(UpdateStockDTO updateStockDTO, Long productId) {
         return CompletableFuture.supplyAsync(() -> {
             return productRepository.updateStock(updateStockDTO, productId);
