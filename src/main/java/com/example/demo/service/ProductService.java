@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.domain.Product;
+import com.example.demo.dto.ProductReturnDTO;
 import com.example.demo.dto.ProductSaveDTO;
 import com.example.demo.dto.ProdutoResponseDTO;
 import com.example.demo.dto.UpdateStockDTO;
@@ -48,5 +49,11 @@ public class ProductService {
         }, taskExecutor);
     }
 
+    public ProductReturnDTO getProductById(Long id) {
+        return productRepository.getProductById(id);
+    }
 
+    public HashMap<Long, Product> getAllProducts() {
+        return productRepository.getAllProducts();
+    }
 }
