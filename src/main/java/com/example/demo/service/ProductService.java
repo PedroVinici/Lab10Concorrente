@@ -1,10 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.domain.Product;
-import com.example.demo.dto.ProductSaveDTO;
-import com.example.demo.dto.ProdutoResponseDTO;
-import com.example.demo.dto.UpdateStockDTO;
-import com.example.demo.dto.UpdateStockResponseDTO;
+
+import com.example.demo.dto.*;
 import com.example.demo.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -17,37 +15,38 @@ import java.util.concurrent.*;
 public class ProductService {
     @Autowired
     ProductRepository productRepository;
-    @Autowired
-    ThreadPoolConfig threadPoolConfig;
-    @Qualifier("taskExecutor")
-    @Autowired
-    private TaskExecutor taskExecutor;
-
-    private ExecutorService executor = Executors.newCachedThreadPool();
 
     public ProdutoResponseDTO addProducts(ProductSaveDTO productSaveDTO) throws ExecutionException, InterruptedException {
-        Callable<ProdutoResponseDTO> newProdutoResponseDTO = () -> {
-            Product newProduct = productRepository.addProduct(productSaveDTO);
+        Product newProduct = productRepository.addProduct(productSaveDTO);
 
-            ProdutoResponseDTO produtoResponseDTO  = new ProdutoResponseDTO();
-            produtoResponseDTO.setId(newProduct.getId());
-            produtoResponseDTO.setName(newProduct.getName());
-            produtoResponseDTO.setMessage("Produto cadastrado com sucesso.");
+        synchronized (newProduct) {
+            ProdutoResponseDTO produtoResponseDTO = ProdutoResponseDTO.builder()
+                    .id(newProduct.getId())
+                    .name(newProduct.getName())
+                    .message("Produto cadastrado com sucesso.")
+                    .build();
 
             return produtoResponseDTO;
-        };
-        Future<ProdutoResponseDTO> newProduct = executor.submit(newProdutoResponseDTO);
-        return newProduct.get();
-
+        }
     }
 
-    public UpdateStockResponseDTO updateStock(UpdateStockDTO updateStockDTO, Long productId) throws ExecutionException, InterruptedException {
-        Callable<UpdateStockResponseDTO> newProdutoResponseDTO = () -> {
-            return productRepository.updateStock(updateStockDTO, productId);
-        };
-        Future<UpdateStockResponseDTO> productResponse = executor.submit(newProdutoResponseDTO);
-        return productResponse.get();
+    public synchronized UpdateStockResponseDTO updateStock(UpdateStockDTO updateStockDTO, Long productId) throws ExecutionException, InterruptedException {
+        return productRepository.updateStock(updateStockDTO, productId);
     }
 
+    public ProductReturnDTO getProductById(Long id) throws ExecutionException, InterruptedException {
+        Product product = productRepository.getProductById(id);
+        ProductReturnDTO productReturnDTO = ProductReturnDTO.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .quantity(product.getQuantity())
+                .build();
 
+        return productReturnDTO;
+    }
+
+    public ConcurrentHashMap<Long, Product> getAllProducts() {
+        return productRepository.getAllProducts();
+    }
 }

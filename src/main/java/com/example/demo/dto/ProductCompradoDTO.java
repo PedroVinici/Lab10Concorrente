@@ -9,11 +9,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class ProductSaveDTO {
+@NoArgsConstructor
+
+public class ProductCompradoDTO {
     private Long id;
     private String name;
-    private Double price;
-    private int quantity;
+    private Integer quantitySold;
 }

@@ -25,4 +25,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
     }
 
+    @ExceptionHandler(InsufficientQuantityException.class)
+    public ResponseEntity<Map<String, Object>> handleInsufficientQuantityException(InsufficientQuantityException ex) {
+        Map<String, Object> responseBody = new HashMap<>();
+        responseBody.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+    }
 }
