@@ -1,7 +1,15 @@
 package com.example.demo.service;
 
 import com.example.demo.domain.Product;
+<<<<<<< HEAD
 import com.example.demo.dto.*;
+=======
+import com.example.demo.dto.ProductReturnDTO;
+import com.example.demo.dto.ProductSaveDTO;
+import com.example.demo.dto.ProdutoResponseDTO;
+import com.example.demo.dto.UpdateStockDTO;
+import com.example.demo.dto.UpdateStockResponseDTO;
+>>>>>>> 6e5197525b769eaa34e57914b6bcfbf0aebab8c4
 import com.example.demo.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,5 +59,11 @@ public class ProductService {
         }
     }
 
+    public ProductReturnDTO getProductById(Long id) {
+        return productRepository.getProductById(id);
+    }
 
+    public HashMap<Long, Product> getAllProducts() {
+        return productRepository.getAllProducts();
+    }
 }

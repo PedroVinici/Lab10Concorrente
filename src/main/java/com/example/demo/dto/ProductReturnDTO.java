@@ -11,7 +11,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductSaveDTO {
+public class ProductReturnDTO {
     private Long id;
     private String name;
     private Double price;
