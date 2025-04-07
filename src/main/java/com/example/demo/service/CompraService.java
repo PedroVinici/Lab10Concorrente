@@ -24,28 +24,28 @@ public class CompraService {
 
 
     public PurchaseDTO purchaseProduct(ProductPurchaseDTO productPurchaseDTO) throws ExecutionException, InterruptedException {
-        Callable<PurchaseDTO> newPurchaseDTO = () -> {
-            Product product = productRepository.getProductById(productPurchaseDTO.getId());
+        Product product = productRepository.getProductById(productPurchaseDTO.getId());
+        if (productPurchaseDTO.getQuantity() > product.getQuantity()) {
+            throw new InsufficientQuantityException(product.getQuantity());
+        }
 
-            if (productPurchaseDTO.getQuantity() > product.getQuantity()) {
-                throw new InsufficientQuantityException(product.getQuantity());
-            }
+        synchronized (product) {
             compraRepository.addCompra(product, productPurchaseDTO.getQuantity());
-
             product.setQuantity(product.getQuantity() - productPurchaseDTO.getQuantity());
 
-            PurchaseDTO purchaseDTO = new PurchaseDTO();
-            purchaseDTO.setMessage("Compra realizada com sucesso.");
-            ProductPurchaseResponseDTO productPurchaseResponseDTO = new ProductPurchaseResponseDTO();
-            productPurchaseResponseDTO.setId(product.getId());
-            productPurchaseResponseDTO.setName(product.getName());
-            productPurchaseResponseDTO.setRemainingStock(product.getQuantity());
-            purchaseDTO.setProduto(productPurchaseResponseDTO);
+            ProductPurchaseResponseDTO productPurchaseResponseDTO = ProductPurchaseResponseDTO.builder()
+                    .id(product.getId())
+                    .name(product.getName())
+                    .remainingStock(product.getQuantity())
+                    .build();
+
+            PurchaseDTO purchaseDTO = PurchaseDTO.builder()
+                    .message("Compra realizada com sucesso.")
+                    .produto(productPurchaseResponseDTO)
+                    .build();
 
             return purchaseDTO;
-        };
-        Future<PurchaseDTO> product = executor.submit(newPurchaseDTO);
-        return product.get();
+        }
     }
 
     public SaleDTO getRelatorio() throws ExecutionException, InterruptedException {
@@ -54,25 +54,33 @@ public class CompraService {
         ConcurrentHashMap<Long, Product> products = productRepository.getAllProducts();
         ConcurrentHashMap<Long, ProductCompradoDTO> compraProdutos = new ConcurrentHashMap<>();
 
-        compras.forEach((idCompra, compra) -> {
-            Product produto = products.get(compra.getProduto().getId());
+        synchronized (compraProdutos) {
+            compras.forEach((idCompra, compra) -> {
+                Product produto = products.get(compra.getProduto().getId());
 
-            if (produto != null) {
-                compraProdutos.merge(
-                        produto.getId(),
-                        new ProductCompradoDTO(produto.getId(), produto.getName(), compra.getQuantidade()),
-                        (existente, novo) -> {
-                            existente.setQuantitySold(existente.getQuantitySold() + novo.getQuantitySold());
-                            return existente;
-                        }
-                );
-            }
-        });
+                if (produto != null) {
+                    compraProdutos.merge(
+                            produto.getId(),
+                            new ProductCompradoDTO(produto.getId(), produto.getName(), compra.getQuantidade()),
+                            (existente, novo) -> {
+                                existente.setQuantitySold(existente.getQuantitySold() + novo.getQuantitySold());
+                                return existente;
+                            }
+                    );
+                }
+            });
 
-        SaleDTO saleDTO = new SaleDTO();
-        saleDTO.setTotalSales(compras.size());
-        saleDTO.setProducts(new ArrayList<>(compraProdutos.values()));
+            SaleDTO saleDTO = SaleDTO.builder()
+                    .totalSales(compras.size())
+                    .products(new ArrayList<>(compraProdutos.values()))
+                    .build();
 
-        return saleDTO;
+            return saleDTO;
+
+        }
+
+
+
+
     }
 }

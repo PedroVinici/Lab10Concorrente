@@ -27,7 +27,7 @@ public class ECommerceController {
             throws ExecutionException, InterruptedException {
         System.out.println("INSERINDO PRODUTOO!!!!!!!");
         ProdutoResponseDTO newProduct = productService.addProducts(productSaveDTO);
-        return new ResponseEntity<>(newProduct, HttpStatus.OK);
+        return new ResponseEntity<>(newProduct, HttpStatus.CREATED);
     }
 
     // Essa é a opção que o GPT sugeriu

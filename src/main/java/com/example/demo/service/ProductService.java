@@ -23,21 +23,18 @@ public class ProductService {
 
     private ExecutorService executor = Executors.newCachedThreadPool();
 
-    //Meus chegados, essa é a opção utilizando o Callable que Geovanni ensinou
     public ProdutoResponseDTO addProducts(ProductSaveDTO productSaveDTO) throws ExecutionException, InterruptedException {
-        Callable<ProdutoResponseDTO> newProdutoResponseDTO = () -> {
-            Product newProduct = productRepository.addProduct(productSaveDTO);
+        Product newProduct = productRepository.addProduct(productSaveDTO);
 
-            ProdutoResponseDTO produtoResponseDTO  = new ProdutoResponseDTO();
-            produtoResponseDTO.setId(newProduct.getId());
-            produtoResponseDTO.setName(newProduct.getName());
-            produtoResponseDTO.setMessage("Produto cadastrado com sucesso.");
+        synchronized (newProduct) {
+            ProdutoResponseDTO produtoResponseDTO = ProdutoResponseDTO.builder()
+                    .id(newProduct.getId())
+                    .name(newProduct.getName())
+                    .message("Produto cadastrado com sucesso.")
+                    .build();
 
             return produtoResponseDTO;
-        };
-        Future<ProdutoResponseDTO> newProduct = executor.submit(newProdutoResponseDTO);
-        return newProduct.get();
-
+        }
     }
     // Essa é a opção que o GPT sugeriu
     public CompletableFuture<UpdateStockResponseDTO> updateStock(UpdateStockDTO updateStockDTO, Long productId) {
