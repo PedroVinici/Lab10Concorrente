@@ -25,7 +25,6 @@ public class ProductService {
 
     private ExecutorService executor = Executors.newCachedThreadPool();
 
-    //Meus chegados, essa é a opção utilizando o Callable que Geovanni ensinou
     public ProdutoResponseDTO addProducts(ProductSaveDTO productSaveDTO) throws ExecutionException, InterruptedException {
         Callable<ProdutoResponseDTO> newProdutoResponseDTO = () -> {
             Product newProduct = productRepository.addProduct(productSaveDTO);
@@ -41,11 +40,13 @@ public class ProductService {
         return newProduct.get();
 
     }
-    // Essa é a opção que o GPT sugeriu
-    public CompletableFuture<UpdateStockResponseDTO> updateStock(UpdateStockDTO updateStockDTO, Long productId) {
-        return CompletableFuture.supplyAsync(() -> {
+
+    public UpdateStockResponseDTO updateStock(UpdateStockDTO updateStockDTO, Long productId) throws ExecutionException, InterruptedException {
+        Callable<UpdateStockResponseDTO> newProdutoResponseDTO = () -> {
             return productRepository.updateStock(updateStockDTO, productId);
-        }, taskExecutor);
+        };
+        Future<UpdateStockResponseDTO> productResponse = executor.submit(newProdutoResponseDTO);
+        return productResponse.get();
     }
 
 
