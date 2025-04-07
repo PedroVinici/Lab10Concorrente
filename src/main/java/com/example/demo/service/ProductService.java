@@ -15,13 +15,6 @@ import java.util.concurrent.*;
 public class ProductService {
     @Autowired
     ProductRepository productRepository;
-    @Autowired
-    ThreadPoolConfig threadPoolConfig;
-    @Qualifier("taskExecutor")
-    @Autowired
-    private TaskExecutor taskExecutor;
-
-    private ExecutorService executor = Executors.newCachedThreadPool();
 
     public ProdutoResponseDTO addProducts(ProductSaveDTO productSaveDTO) throws ExecutionException, InterruptedException {
         Product newProduct = productRepository.addProduct(productSaveDTO);
@@ -38,27 +31,21 @@ public class ProductService {
     }
 
     public UpdateStockResponseDTO updateStock(UpdateStockDTO updateStockDTO, Long productId) throws ExecutionException, InterruptedException {
-        Callable<UpdateStockResponseDTO> newProdutoResponseDTO = () -> {
+        synchronized (updateStockDTO) {
             return productRepository.updateStock(updateStockDTO, productId);
-        };
-        Future<UpdateStockResponseDTO> productResponse = executor.submit(newProdutoResponseDTO);
-        return productResponse.get();
+        }
     }
 
     public ProductReturnDTO getProductById(Long id) throws ExecutionException, InterruptedException {
-        Callable<ProductReturnDTO> newProdutoReturnDTO = () -> {
-            Product product = productRepository.getProductById(id);
-            ProductReturnDTO productReturnDTO = new ProductReturnDTO();
+        Product product = productRepository.getProductById(id);
+        ProductReturnDTO productReturnDTO = ProductReturnDTO.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .price(product.getPrice())
+                .quantity(product.getQuantity())
+                .build();
 
-            productReturnDTO.setId(product.getId());
-            productReturnDTO.setName(product.getName());
-            productReturnDTO.setPrice(product.getPrice());
-            productReturnDTO.setQuantity(product.getQuantity());
-
-            return productReturnDTO;
-        };
-        Future<ProductReturnDTO> product = executor.submit(newProdutoReturnDTO);
-        return product.get();
+        return productReturnDTO;
     }
 
     public ConcurrentHashMap<Long, Product> getAllProducts() {

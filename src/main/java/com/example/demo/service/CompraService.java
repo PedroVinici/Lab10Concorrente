@@ -20,9 +20,6 @@ public class CompraService {
     @Autowired
     CompraRepository compraRepository;
 
-    private ExecutorService executor = Executors.newCachedThreadPool();
-
-
     public PurchaseDTO purchaseProduct(ProductPurchaseDTO productPurchaseDTO) throws ExecutionException, InterruptedException {
         Product product = productRepository.getProductById(productPurchaseDTO.getId());
         if (productPurchaseDTO.getQuantity() > product.getQuantity()) {
