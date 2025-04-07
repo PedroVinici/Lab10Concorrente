@@ -30,10 +30,8 @@ public class ProductService {
         }
     }
 
-    public UpdateStockResponseDTO updateStock(UpdateStockDTO updateStockDTO, Long productId) throws ExecutionException, InterruptedException {
-        synchronized (updateStockDTO) {
-            return productRepository.updateStock(updateStockDTO, productId);
-        }
+    public synchronized UpdateStockResponseDTO updateStock(UpdateStockDTO updateStockDTO, Long productId) throws ExecutionException, InterruptedException {
+        return productRepository.updateStock(updateStockDTO, productId);
     }
 
     public ProductReturnDTO getProductById(Long id) throws ExecutionException, InterruptedException {
