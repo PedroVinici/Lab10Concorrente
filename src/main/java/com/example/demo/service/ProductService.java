@@ -36,11 +36,13 @@ public class ProductService {
             return produtoResponseDTO;
         }
     }
-    // Essa é a opção que o GPT sugeriu
-    public CompletableFuture<UpdateStockResponseDTO> updateStock(UpdateStockDTO updateStockDTO, Long productId) {
-        return CompletableFuture.supplyAsync(() -> {
+
+    public UpdateStockResponseDTO updateStock(UpdateStockDTO updateStockDTO, Long productId) throws ExecutionException, InterruptedException {
+        Callable<UpdateStockResponseDTO> newProdutoResponseDTO = () -> {
             return productRepository.updateStock(updateStockDTO, productId);
-        }, taskExecutor);
+        };
+        Future<UpdateStockResponseDTO> productResponse = executor.submit(newProdutoResponseDTO);
+        return productResponse.get();
     }
 
     public ProductReturnDTO getProductById(Long id) throws ExecutionException, InterruptedException {

@@ -21,21 +21,16 @@ public class ECommerceController {
     @Autowired
     CompraService compraService;
 
-    // Meus chegados, essa é a opção utilizando o Callable que Geovanni ensinou
+
     @PostMapping("/products")
-    public ResponseEntity<ProdutoResponseDTO> addProduct(@RequestBody ProductSaveDTO productSaveDTO)
-            throws ExecutionException, InterruptedException {
-        System.out.println("INSERINDO PRODUTOO!!!!!!!");
+    public ResponseEntity<ProdutoResponseDTO> addProduct(@RequestBody ProductSaveDTO productSaveDTO) throws ExecutionException, InterruptedException {
         ProdutoResponseDTO newProduct = productService.addProducts(productSaveDTO);
         return new ResponseEntity<>(newProduct, HttpStatus.CREATED);
     }
 
-    // Essa é a opção que o GPT sugeriu
     @PutMapping("/products/{id}/stock")
-    public ResponseEntity<UpdateStockResponseDTO> updateStock(@PathVariable Long id,
-            @RequestBody UpdateStockDTO updateStockDTO) {
-        System.out.println("ATUALIZANDO STOOOOQUE!!!!");
-        UpdateStockResponseDTO response = productService.updateStock(updateStockDTO, id).join();
+    public ResponseEntity<UpdateStockResponseDTO> updateStock(@PathVariable Long id, @RequestBody UpdateStockDTO updateStockDTO) throws ExecutionException, InterruptedException {
+        UpdateStockResponseDTO response = productService.updateStock(updateStockDTO, id);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
