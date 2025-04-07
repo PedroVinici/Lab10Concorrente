@@ -1,10 +1,13 @@
 package com.example.demo.dto;
 
+import com.example.demo.domain.Product;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,7 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class ProductPurchaseDTO {
-    private Long id;
-    private Integer quantity;
+public class SaleDTO {
+    private Integer totalSales;
+    private List<ProductCompradoDTO> products;
 }

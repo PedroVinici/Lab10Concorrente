@@ -12,7 +12,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class ProductPurchaseDTO {
+public class ProductCompradoDTO {
     private Long id;
-    private Integer quantity;
+    private String name;
+    private Integer quantitySold;
 }

@@ -1,15 +1,8 @@
 package com.example.demo.service;
 
 import com.example.demo.domain.Product;
-<<<<<<< HEAD
+
 import com.example.demo.dto.*;
-=======
-import com.example.demo.dto.ProductReturnDTO;
-import com.example.demo.dto.ProductSaveDTO;
-import com.example.demo.dto.ProdutoResponseDTO;
-import com.example.demo.dto.UpdateStockDTO;
-import com.example.demo.dto.UpdateStockResponseDTO;
->>>>>>> 6e5197525b769eaa34e57914b6bcfbf0aebab8c4
 import com.example.demo.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -53,17 +46,23 @@ public class ProductService {
         }, taskExecutor);
     }
 
-    public CompletableFuture<PurchaseDTO> purchaseProduct(ProductPurchaseDTO productPurchaseDTO) throws ExecutionException, InterruptedException {
-        Callable<PurchaseDTO> newPurchaseDTO = () -> {
-            Product product = productRepository.get
-        }
+    public ProductReturnDTO getProductById(Long id) throws ExecutionException, InterruptedException {
+        Callable<ProductReturnDTO> newProdutoReturnDTO = () -> {
+            Product product = productRepository.getProductById(id);
+            ProductReturnDTO productReturnDTO = new ProductReturnDTO();
+
+            productReturnDTO.setId(product.getId());
+            productReturnDTO.setName(product.getName());
+            productReturnDTO.setPrice(product.getPrice());
+            productReturnDTO.setQuantity(product.getQuantity());
+
+            return productReturnDTO;
+        };
+        Future<ProductReturnDTO> product = executor.submit(newProdutoReturnDTO);
+        return product.get();
     }
 
-    public ProductReturnDTO getProductById(Long id) {
-        return productRepository.getProductById(id);
-    }
-
-    public HashMap<Long, Product> getAllProducts() {
+    public ConcurrentHashMap<Long, Product> getAllProducts() {
         return productRepository.getAllProducts();
     }
 }

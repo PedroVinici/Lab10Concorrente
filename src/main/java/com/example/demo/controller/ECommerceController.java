@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.domain.Product;
 import com.example.demo.dto.*;
+import com.example.demo.service.CompraService;
 import com.example.demo.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,8 @@ import java.util.concurrent.ExecutionException;
 public class ECommerceController {
     @Autowired
     ProductService productService;
+    @Autowired
+    CompraService compraService;
 
     // Meus chegados, essa é a opção utilizando o Callable que Geovanni ensinou
     @PostMapping("/products")
@@ -36,21 +39,21 @@ public class ECommerceController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("/products/purchase")
-    public ResponseEntity<PurchaseDTO> purchase(@RequestBody ProductPurchaseDTO productPurchaseDTO) {
-        PurchaseDTO response = productService.purchaseProduct(productPurchaseDTO).join();
+    @PostMapping("/purchase")
+    public ResponseEntity<PurchaseDTO> purchase(@RequestBody ProductPurchaseDTO productPurchaseDTO) throws ExecutionException, InterruptedException {
+        PurchaseDTO response = compraService.purchaseProduct(productPurchaseDTO);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
     
     @GetMapping("/products/{id}")
-    public ResponseEntity<ProductReturnDTO> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductReturnDTO> getProductById(@PathVariable Long id) throws ExecutionException, InterruptedException {
         ProductReturnDTO product = productService.getProductById(id);
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
     @GetMapping("/products")
     public ResponseEntity<List<ProductReturnDTO>> getAllProducts() {
-        HashMap<Long, Product> products = productService.getAllProducts();
+        ConcurrentHashMap<Long, Product> products = productService.getAllProducts();
 
         List<ProductReturnDTO> productList = products.values()
                 .parallelStream()
@@ -62,5 +65,11 @@ public class ECommerceController {
                 .toList();
 
         return new ResponseEntity<>(productList, HttpStatus.OK);
+    }
+
+    @GetMapping("/sales/report")
+    public ResponseEntity<SaleDTO> salesReport() throws ExecutionException, InterruptedException {
+        SaleDTO response = compraService.getRelatorio();
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

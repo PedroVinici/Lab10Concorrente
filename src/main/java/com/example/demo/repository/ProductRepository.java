@@ -53,20 +53,15 @@ public class ProductRepository {
         );
     }
 
-    public ProductReturnDTO getProductById(Long id) {
+    public Product getProductById(Long id) {
         Product product = products.get(id);
         if (product == null) {
             throw new ProductNotExistException();
         }
-        return new ProductReturnDTO(
-                product.getId(),
-                product.getName(),
-                product.getPrice(),
-                product.getQuantity()
-        );
+        return product;
     }
 
-    public HashMap<Long, Product> getAllProducts() {
-        return new HashMap<>(products);
+    public ConcurrentHashMap<Long, Product> getAllProducts() {
+        return products;
     }
 }

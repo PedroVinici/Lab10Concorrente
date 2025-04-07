@@ -1,18 +1,18 @@
-package com.example.demo.dto;
+package com.example.demo.domain;
 
+import com.example.demo.dto.PurchaseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-
-public class ProductPurchaseDTO {
+public class Compra {
     private Long id;
-    private Integer quantity;
+    private int quantidade;
+    private Product produto;
 }

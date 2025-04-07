@@ -15,5 +15,5 @@ import lombok.Setter;
 public class ProductPurchaseResponseDTO {
     private Long id;
     private String name;
-    private int remainingStock;
+    private Integer remainingStock;
 }
