@@ -23,19 +23,23 @@ public class LoadTestGenerator {
     }
 
     public void startLoadTest() throws InterruptedException {
-        ExecutorService executorService = Executors.newFixedThreadPool(50);  // Ajuste o número de threads conforme necessário
+        //ExecutorService executorService = Executors.newFixedThreadPool(50);  // Ajuste o número de threads conforme necessário
 
-        // Criando múltiplas threads para simular concorrência
-        for (int i = 0; i < 10; i++) {
-            executorService.submit(new RequestSimulator(i));
-        }
+        RequestSimulator requestSimulator = new RequestSimulator(1);
+        System.out.println("\n-----------------------\nSimulando caso de Altas taxas de CONSULTAS\n-----------------------\n");
+        requestSimulator.simulaRequisicoesConsulta();
+        System.out.println("\n-----------------------\nSimulando caso de Altas taxas de COMPRA\n-----------------------\n");
+        requestSimulator.simulaRequisicoesCompra();
+        System.out.println("\n-----------------------\nSimulando caso de Altas taxas de ATUALIZAÇÃO\n-----------------------\n");
+        requestSimulator.simulaRequisicoesAtulizacoes();
+        System.out.println("\n-----------------------\nSimulando caso de Altas taxas de RELATORIOS\n-----------------------\n");
+        requestSimulator.simulaRequisicoesRelatorio();
 
-        executorService.shutdown();
-        executorService.awaitTermination(1, TimeUnit.MINUTES);  // Aguarda o término das threads
+
     }
 
     // Classe interna para simular uma sequência de requisições
-    private class RequestSimulator implements Runnable {
+    private class RequestSimulator {
 
         private final int userId;
 
@@ -43,37 +47,75 @@ public class LoadTestGenerator {
             this.userId = userId;
         }
 
-        @Override
-        public void run() {
-            try {
-                for (int i = 0; i < 5; i++) {
-                    int action = (int) (Math.random() * 6);  // Ação aleatória entre 0 e 3
-                    switch (action) {
-                        case 0:
-                            consultaProduto();
-                            break;
-                        case 1:
-                            compraProduto();
-                            break;
-                        case 2:
-                            atualizaEstoque();
-                            break;
-                        case 3:
-                            cadastroProduto();
-                            break;
-                        case 4:
-                            consultaProdutoPorId();
-                            break;
-                        case 5:
-                            geraRelatorio();
-                            break;
+
+        public void simulaRequisicoesConsulta() throws InterruptedException {
+            ExecutorService executorService = Executors.newFixedThreadPool(20); // Pool de 10 threads para simular concorrência
+            Random random = new Random();
+
+            // Submete várias tarefas de consulta de produto
+            for (int i = 0; i < 100; i++) {
+                int verfic = random.nextInt(2);
+                executorService.submit(() -> {
+                    if(verfic == 0){
+                        consultaProduto();
+                    } else {
+                        cadastroProduto();
                     }
-                    // Espera um tempo aleatório entre as requisições
-                    Thread.sleep((int) (Math.random() * 2000));
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                });
             }
+
+            // Finaliza o ExecutorService
+            executorService.shutdown();
+            executorService.awaitTermination(20, TimeUnit.SECONDS);
+        }
+
+        public void simulaRequisicoesRelatorio() throws InterruptedException {
+            ExecutorService executorService = Executors.newFixedThreadPool(20); // Pool de 10 threads para simular concorrência
+            Random random = new Random();
+
+            // Submete várias tarefas de consulta de produto
+            for (int i = 0; i < 100; i++) {
+                int verfic = random.nextInt(4);
+                executorService.submit(() -> {
+                    if(verfic == 0){
+                        atualizaEstoque();
+                    } else {
+                        geraRelatorio();
+                    }
+                });
+            }
+
+            executorService.shutdown();
+            executorService.awaitTermination(20, TimeUnit.SECONDS);
+        }
+
+        public void simulaRequisicoesCompra() throws InterruptedException {
+            ExecutorService executorService = Executors.newFixedThreadPool(10);
+            cadastroProduto(1L);
+
+            // Submete várias tarefas de consulta de produto
+            for (int i = 0; i < 10; i++) {
+                executorService.submit(() -> {
+                     compraProduto(2L);
+                });
+            }
+
+            executorService.shutdown();
+            executorService.awaitTermination(20, TimeUnit.SECONDS);
+        }
+
+        public void simulaRequisicoesAtulizacoes() throws InterruptedException {
+            ExecutorService executorService = Executors.newFixedThreadPool(50); // Pool de 10 threads para simular concorrência
+
+            // Submete várias tarefas de consulta de produto
+            for (int i = 0; i < 50; i++) {
+                executorService.submit(() -> {
+                    atualizaEstoque();
+                });
+            }
+
+            executorService.shutdown();
+            executorService.awaitTermination(20, TimeUnit.SECONDS);
         }
 
         // Simula o cadastro de um novo produto (POST /products)
@@ -81,7 +123,6 @@ public class LoadTestGenerator {
             Random random = new Random();
             Long idNew = random.nextLong(1,21);
             String url = baseUrl + "/products";  // Rota de cadastro de produto
-            String requestJson = "{ \"id\": \""+idNew+"\", \"name\": \"Teclado Mecânico\", \"price\": 499.99, \"quantity\": 30 }";
             ProductSaveDTO productSaveDTO = new ProductSaveDTO().builder().id(idNew).name("Teclado").price(499.11).quantity(30).build();
 
             HttpHeaders headers = new HttpHeaders();
@@ -91,11 +132,9 @@ public class LoadTestGenerator {
             HttpEntity<ProductSaveDTO> entity = new HttpEntity<>(productSaveDTO, headers);
 
             try {
-                // Envia a requisição POST e recebe o retorno como um objeto ProductSaveDTO
                 ResponseEntity<ProductSaveDTO> response = restTemplate.postForEntity(url, entity, ProductSaveDTO.class);
 
 
-                // Verifica a resposta e exibe a resposta completa
                 if (response.getStatusCodeValue() == 201) {
                     System.out.println("Usuário " + userId + " - Cadastro de Produto: Sucesso");
                     System.out.println("Resposta: " + response.getBody());  // Exibe o corpo da resposta (o DTO)
@@ -104,11 +143,37 @@ public class LoadTestGenerator {
                     System.out.println("Resposta: " + response.getBody());
                 }
             } catch (HttpClientErrorException.Conflict e) {
-                // Tratamento para quando o produto já existe (409 Conflict)
                 System.out.println("Usuário " + userId + " - Produto já existente: " + e.getMessage());
             } catch (HttpClientErrorException e) {
-                // Tratamento para outros erros
                 System.out.println("Usuário " + userId + " - Erro no Cadastro de Produto: " + e.getMessage());
+            }
+        }
+
+        private void cadastroProduto(Long id) {
+            Random random = new Random();
+            String url = baseUrl + "/products";  // Rota de cadastro de produto
+            ProductSaveDTO productSaveDTO = new ProductSaveDTO().builder().id(id).name("Teclado").price(499.11).quantity(30).build();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<ProductSaveDTO> entity = new HttpEntity<>(productSaveDTO, headers);
+
+            try {
+                ResponseEntity<ProductSaveDTO> response = restTemplate.postForEntity(url, entity, ProductSaveDTO.class);
+
+
+                if (response.getStatusCodeValue() == 201) {
+                    System.out.println("Usuário " + userId + " - Cadastro de Produto: Sucesso");
+                    System.out.println("Resposta: " + response.getBody());  // Exibe o corpo da resposta (o DTO)
+                } else {
+                    System.out.println("Usuário " + userId + " - Erro no Cadastro de Produto: " + response.getStatusCode());
+                    System.out.println("Resposta: " + response.getBody());
+                }
+            } catch (HttpClientErrorException.Conflict e) {
+                System.out.println("Usuário " + userId + " - Produto já existente: " + e.getMessage());
+            } catch (HttpClientErrorException e) {
+                System.out.println(e.getMessage());
             }
         }
 
@@ -116,7 +181,6 @@ public class LoadTestGenerator {
         private void consultaProduto() {
             String url = baseUrl + "/products";
             try {
-                // Altere para ProductReturnDTO[] para lidar com um array de produtos
                 ResponseEntity<ProductReturnDTO[]> response = restTemplate.getForEntity(url, ProductReturnDTO[].class);
 
                 System.out.println("Usuário " + userId + " - Consulta Produto: " + response.getStatusCode());
@@ -136,7 +200,6 @@ public class LoadTestGenerator {
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
-                System.out.println("Usuário " + userId + " - Erro na consulta de produto.");
             }
         }
 
@@ -145,7 +208,6 @@ public class LoadTestGenerator {
             Long idNew = random.nextLong(1,21);
             String url = baseUrl + "/products/" + idNew;
             try {
-                // Altere para ProductReturnDTO[] para lidar com um array de produtos
                 ResponseEntity<ProductReturnDTO> response = restTemplate.getForEntity(url, ProductReturnDTO.class);
 
                 System.out.println("Usuário " + userId + " - Consulta Produto: " + response.getStatusCode());
@@ -165,7 +227,6 @@ public class LoadTestGenerator {
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
-                System.out.println("Usuário " + userId + " - Erro na consulta de produto por id.");
             }
         }
 
@@ -186,7 +247,23 @@ public class LoadTestGenerator {
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
-                System.out.println("Usuário " + userId + " - Erro na compra de produto.");
+            }
+        }
+
+        private void compraProduto(Long id) {
+            String url = baseUrl + "/purchase";
+            ProductPurchaseDTO request = new ProductPurchaseDTO(id, 2);  // Produto e quantidade
+            try {
+                ResponseEntity<PurchaseDTO> response = restTemplate.postForEntity(url, request, PurchaseDTO.class);
+                System.out.println("Usuário " + userId + " - Compra Produto: " + response.getStatusCode());
+                System.out.println("Resposta da compra de id: " + id);
+                PurchaseDTO compra = response.getBody();
+                if (compra != null) {
+                    System.out.println("Message: " + compra.getMessage());
+                    System.out.println("Produto: " + compra.getProduto().toString());
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
         }
 
@@ -200,7 +277,7 @@ public class LoadTestGenerator {
                 System.out.println("Usuário " + userId + " - Estoque Atualizado.");
 
             } catch (Exception e) {
-                System.out.println("Usuário " + userId + " - Erro na atualização de estoque.");
+                System.out.println(e.getMessage());
             }
         }
 
@@ -219,7 +296,7 @@ public class LoadTestGenerator {
                 }
 
             } catch (Exception e) {
-                System.out.println("Usuário " + userId + " - Erro na geração de relatório.");
+                System.out.println(e.getMessage());
             }
         }
     }
